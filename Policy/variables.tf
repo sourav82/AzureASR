@@ -37,3 +37,7 @@ variable "cust_scope" {
   default     = "/subscriptions/e214bc97-a738-4d9b-9671-8444a7e1a720/resourceGroups/BermudaRG"
   description = "Custom scope"
 }
+variable "vaultName" {
+  default     = "RSV-UKW-Spoke-01"
+  description = "Vault name"
+}

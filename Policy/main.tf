@@ -1,3 +1,11 @@
+resource "azurerm_site_recovery_replication_policy" "asr-policy" {
+  name                                                 = "asr-policy"
+  resource_group_name                                  = var.vaultResourceGroupId
+  recovery_vault_name                                  = var.vaultName
+  recovery_point_retention_in_minutes                  = 7 * 24 * 60
+  application_consistent_snapshot_frequency_in_minutes = 4 * 60
+}
+
 resource "azurerm_resource_group_policy_assignment" "allvms" { 
  name = "all-vm-asr" 
  identity { type = "SystemAssigned" }
@@ -6,6 +14,7 @@ resource "azurerm_resource_group_policy_assignment" "allvms" {
  policy_definition_id = "/providers/Microsoft.Authorization/policyDefinitions/ac34a73f-9fa5-4067-9247-a3ecae514468" 
  description = "Virtual machines without disaster recovery configurations are vulnerable to outages and other disruptions. If the virtual machine does not already have disaster recovery configured, this would initiate the same by enabling replication using preset configurations to facilitate business continuity.  You can optionally include/exclude virtual machines containing a specified tag to control the scope of assignment. To learn more about disaster recovery, visit https://aka.ms/asr-doc." 
  display_name = "Configure ASR for all VMs in the scope" 
+ depends_on = [azurerm_site_recovery_replication_policy.asr-policy]
  parameters = jsonencode (
  {
 	"sourceRegion": {
