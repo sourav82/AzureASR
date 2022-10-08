@@ -1,2 +1,12 @@
 Policy/.terraform
 Sample/.terraform
+.terraform
+*.exe
+
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
