@@ -1,10 +1,21 @@
+resource "azurerm_storage_account" "spokestorage" {
+  name                     = var.storageName
+  resource_group_name      = var.storageResourceGroupName
+  location                 = var.sourceRegion
+  account_tier             = "Standard"
+  account_replication_type = "GRS"
+}
+
 resource "azurerm_site_recovery_replication_policy" "asr-policy" {
   name                                                 = "asr-policy"
-  resource_group_name                                  = var.vaultResourceGroupId
+  resource_group_name                                  = var.vaultResourceGroupName
   recovery_vault_name                                  = var.vaultName
   recovery_point_retention_in_minutes                  = 7 * 24 * 60
   application_consistent_snapshot_frequency_in_minutes = 4 * 60
+  depends_on = [azurerm_storage_account.spokestorage]
 }
+
+
 
 resource "azurerm_resource_group_policy_assignment" "allvms" { 
  name = "all-vm-asr" 
@@ -36,7 +47,7 @@ resource "azurerm_resource_group_policy_assignment" "allvms" {
 		"value": var.recoveryNetworkId
 	},
 	"cacheStorageAccountId": {
-		"value": var.cacheStorageAccountId
+		"value": azurerm_storage_account.spokestorage.id
 	},
 	"effect": {
 		"value": "DeployIfNotExists"
@@ -52,23 +63,23 @@ resource "azurerm_role_assignment" "roleAssignementLogAnalyticsContributor1" {
 }
 
 resource "azurerm_role_assignment" "roleAssignementLogAnalyticsContributor" {
-  scope                = "/subscriptions/e214bc97-a738-4d9b-9671-8444a7e1a720/resourceGroups/Spoke-UKW"
+  scope                = "/subscriptions/e214bc97-a738-4d9b-9671-8444a7e1a720/resourceGroups/Spoke-ASR"
   role_definition_name = "Contributor"
   principal_id         = azurerm_resource_group_policy_assignment.allvms.identity[0].principal_id
   depends_on = [azurerm_resource_group_policy_assignment.allvms]
 }
 
-resource "azurerm_role_assignment" "roleAssignementLogAnalyticsContributor2" {
-  scope                = "/subscriptions/e214bc97-a738-4d9b-9671-8444a7e1a720/resourceGroups/Bermuda-UKW"
-  role_definition_name = "Contributor"
-  principal_id         = azurerm_resource_group_policy_assignment.allvms.identity[0].principal_id
-  depends_on = [azurerm_resource_group_policy_assignment.allvms]
-}
+#resource "azurerm_role_assignment" "roleAssignementLogAnalyticsContributor2" {
+#  scope                = "/subscriptions/e214bc97-a738-4d9b-9671-8444a7e1a720/resourceGroups/Bermuda-UKW"
+#  role_definition_name = "Contributor"
+#  principal_id         = azurerm_resource_group_policy_assignment.allvms.identity[0].principal_id
+#  depends_on = [azurerm_resource_group_policy_assignment.allvms]
+#}
 
 resource "azurerm_resource_group_policy_remediation" "allvms-remediate" {
   name                 = "asr-policy-remediation"
   resource_group_id    = var.cust_scope 
   policy_assignment_id = azurerm_resource_group_policy_assignment.allvms.id
   location_filters     = ["UK South"]
-  depends_on = [azurerm_resource_group_policy_assignment.allvms, azurerm_role_assignment.roleAssignementLogAnalyticsContributor, azurerm_role_assignment.roleAssignementLogAnalyticsContributor1, azurerm_role_assignment.roleAssignementLogAnalyticsContributor2]
+  depends_on = [azurerm_resource_group_policy_assignment.allvms, azurerm_role_assignment.roleAssignementLogAnalyticsContributor, azurerm_role_assignment.roleAssignementLogAnalyticsContributor1]#, azurerm_role_assignment.roleAssignementLogAnalyticsContributor2]
 }
