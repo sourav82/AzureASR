@@ -1,3 +1,12 @@
+resource "azurerm_recovery_services_vault" "vault" {
+  name                = var.vaultName
+  location            = var.targetRegion
+  resource_group_name = var.vaultResourceGroupName
+  sku                 = "Standard"
+
+  soft_delete_enabled = false
+}
+
 resource "azurerm_storage_account" "spokestorage" {
   name                     = var.storageName
   resource_group_name      = var.storageResourceGroupName
@@ -11,10 +20,9 @@ resource "azurerm_site_recovery_replication_policy" "asr-policy" {
   resource_group_name                                  = var.vaultResourceGroupName
   recovery_vault_name                                  = var.vaultName
   recovery_point_retention_in_minutes                  = 7 * 24 * 60
-  application_consistent_snapshot_frequency_in_minutes = 4 * 60
+  application_consistent_snapshot_frequency_in_minutes = 12 * 60
   depends_on = [azurerm_storage_account.spokestorage]
 }
-
 
 
 resource "azurerm_resource_group_policy_assignment" "allvms" { 
@@ -80,6 +88,6 @@ resource "azurerm_resource_group_policy_remediation" "allvms-remediate" {
   name                 = "asr-policy-remediation"
   resource_group_id    = var.cust_scope 
   policy_assignment_id = azurerm_resource_group_policy_assignment.allvms.id
-  location_filters     = ["UK South"]
+  location_filters     = [var.sourceRegion]
   depends_on = [azurerm_resource_group_policy_assignment.allvms, azurerm_role_assignment.roleAssignementLogAnalyticsContributor, azurerm_role_assignment.roleAssignementLogAnalyticsContributor1]#, azurerm_role_assignment.roleAssignementLogAnalyticsContributor2]
 }
