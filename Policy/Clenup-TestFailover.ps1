@@ -1,0 +1,2 @@
+$recoveryPlan=Get-AzRecoveryServicesAsrRecoveryPlan -Name "Algo"
+Start-AzRecoveryServicesAsrTestFailoverCleanupJob -RecoveryPlan $recoveryPlan

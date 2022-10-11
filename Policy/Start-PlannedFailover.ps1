@@ -1,0 +1,2 @@
+$recoveryPlan=Get-AzRecoveryServicesAsrRecoveryPlan -Name "Algo"
+Start-AzRecoveryServicesAsrUnplannedFailoverJob -RecoveryPlan $recoveryPlan -Direction PrimaryToRecovery
